@@ -88,7 +88,7 @@ liquibase {
             changelogFile 'src/main/resources/db/changelog/db.changelog-master.yaml'
             url 'jdbc:postgresql://' + (System.getenv('DB_HOST') ?: 'localhost') + ':' + (System.getenv('DB_PORT') ?: '5432') + '/' + (System.getenv('DB_NAME') ?: 'subscription_db')
             username System.getenv('DB_USERNAME') ?: 'postgres'
-            password System.getenv('DB_PASSWORD') ?: 'password'
+            password System.getenv('DB_PASSWORD') ?: 'postgres'
             classpath 'src/main/resources'
             logLevel 'info'
         }
@@ -121,7 +121,7 @@ liquibase {
         }
     }
     
-    runList = ['main']
+    runList = 'main'
 }
 
 // Hide all default Liquibase tasks from task list
@@ -150,7 +150,7 @@ task liquibaseUpdateDev {
     description = 'Update development database'
     doLast {
         liquibase.runList = 'dev'
-        liquibase.run()
+        println "Set runList to 'dev'. Now run: ./gradlew update"
     }
 }
 
@@ -159,7 +159,7 @@ task liquibaseUpdateTest {
     description = 'Update test database'
     doLast {
         liquibase.runList = 'test'
-        liquibase.run()
+        println "Set runList to 'test'. Now run: ./gradlew update"
     }
 }
 
@@ -168,7 +168,7 @@ task liquibaseUpdateProd {
     description = 'Update production database'
     doLast {
         liquibase.runList = 'prod'
-        liquibase.run()
+        println "Set runList to 'prod'. Now run: ./gradlew update"
     }
 }
 
@@ -179,7 +179,7 @@ task liquibaseRollback {
     doLast {
         if (project.hasProperty('rollbackCount')) {
             liquibase.runList = 'main'
-            liquibase.run()
+            println "Set runList to 'main'. Now run: ./gradlew rollback"
         } else {
             println 'Please specify rollbackCount property: -ProllbackCount=1'
         }
@@ -192,7 +192,7 @@ task liquibaseStatus {
     description = 'Check database status'
     doLast {
         liquibase.runList = 'main'
-        liquibase.run()
+        println "Set runList to 'main'. Now run: ./gradlew status"
     }
 }
 
@@ -202,7 +202,7 @@ task liquibaseValidate {
     description = 'Validate changelog'
     doLast {
         liquibase.runList = 'main'
-        liquibase.run()
+        println "Set runList to 'main'. Now run: ./gradlew validate"
     }
 }
 
@@ -212,7 +212,7 @@ task liquibaseUpdate {
     description = 'Update main database'
     doLast {
         liquibase.runList = 'main'
-        liquibase.run()
+        println "Set runList to 'main'. Now run: ./gradlew update"
     }
 }
 
@@ -222,7 +222,7 @@ task liquibaseUpdateSQL {
     description = 'Generate SQL for database update (dry run)'
     doLast {
         liquibase.runList = 'main'
-        liquibase.run()
+        println "Set runList to 'main'. Now run: ./gradlew updateSQL"
     }
 }
 
