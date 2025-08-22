@@ -1,0 +1,227 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.liquibase.gradle' version '2.2.0'
+}
+
+group = 'org.crochet'
+version = '0.0.1-SNAPSHOT'
+description = 'subscription-service'
+
+java {
+    sourceCompatibility = '21'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    maven { url 'https://repo.spring.io/milestone' }
+    mavenCentral()
+}
+
+ext {
+    set('springCloudVersion', "2024.0.0-RC1")
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0-RC1'
+
+    implementation 'jakarta.validation:jakarta.validation-api:3.1.0'
+
+    implementation 'org.postgresql:postgresql:42.7.4'
+    implementation 'org.liquibase:liquibase-core:4.30.0'
+
+    compileOnly 'org.projectlombok:lombok:1.18.36'
+    annotationProcessor 'org.projectlombok:lombok:1.18.36'
+
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test:6.3.0'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.32'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
+
+    liquibaseRuntime 'org.liquibase:liquibase-core:4.30.0'
+    liquibaseRuntime 'org.liquibase:liquibase-groovy-dsl:3.0.3'
+    liquibaseRuntime 'info.picocli:picocli:4.7.6'
+    liquibaseRuntime 'org.yaml:snakeyaml:2.0'
+    liquibaseRuntime 'org.postgresql:postgresql:42.7.4'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+liquibase {
+    activities {
+        main {
+            changelogFile 'src/main/resources/db/changelog/db.changelog-master.yaml'
+            url 'jdbc:postgresql://' + (System.getenv('DB_HOST') ?: 'localhost') + ':' + (System.getenv('DB_PORT') ?: '5432') + '/' + (System.getenv('DB_NAME') ?: 'subscription_db')
+            username System.getenv('DB_USERNAME') ?: 'postgres'
+            password System.getenv('DB_PASSWORD') ?: 'postgres'
+            classpath 'src/main/resources'
+            logLevel 'info'
+        }
+        
+        dev {
+            changelogFile 'src/main/resources/db/changelog/db.changelog-master.yaml'
+            url 'jdbc:postgresql://' + (System.getenv('DB_HOST') ?: 'localhost') + ':' + (System.getenv('DB_PORT') ?: '5432') + '/' + (System.getenv('DB_NAME') ?: 'subscription_db')
+            username System.getenv('DB_USERNAME') ?: 'postgres'
+            password System.getenv('DB_PASSWORD') ?: 'password'
+            classpath 'src/main/resources'
+            logLevel 'debug'
+        }
+        
+        test {
+            changelogFile 'src/main/resources/db/changelog/db.changelog-master.yaml'
+            url 'jdbc:postgresql://' + (System.getenv('DB_HOST') ?: 'localhost') + ':' + (System.getenv('DB_PORT') ?: '5432') + '/' + (System.getenv('DB_NAME') ?: 'subscription_db')
+            username System.getenv('DB_USERNAME') ?: 'postgres'
+            password System.getenv('DB_PASSWORD') ?: 'password'
+            classpath 'src/main/resources'
+            logLevel 'info'
+        }
+        
+        prod {
+            changelogFile 'src/main/resources/db/changelog/db.changelog-master.yaml'
+            url 'jdbc:postgresql://' + (System.getenv('DB_HOST') ?: 'localhost') + ':' + (System.getenv('DB_PORT') ?: '5432') + '/' + (System.getenv('DB_NAME') ?: 'subscription_db')
+            username System.getenv('DB_USERNAME') ?: 'postgres'
+            password System.getenv('DB_PASSWORD') ?: 'password'
+            classpath 'src/main/resources'
+            logLevel 'warn'
+        }
+    }
+    
+    runList = 'main'
+}
+
+// Hide all default Liquibase tasks from task list
+tasks.matching { task ->
+    task.name in ['update', 'updateSQL', 'rollback', 'rollbackSQL', 'status', 'validate', 
+                  'calculateChecksum', 'clearChecksums', 'diff', 'snapshot', 'history', 
+                  'dbDoc', 'changelogSync', 'changelogSyncSql', 'changelogSyncToTag', 
+                  'changelogSyncToTagSql', 'dropAll', 'executeSql', 'executeSqlFile',
+                  'futureRollbackCountSql', 'futureRollbackFromTagSql', 'futureRollbackSql',
+                  'generateChangelog', 'checks', 'deactivateChangelog', 'diffChangelog',
+                  'listLocks', 'markNextChangesetRan', 'markNextChangesetRanSql',
+                  'registerChangelog', 'releaseLocks', 'rollbackCount', 'rollbackCountSql',
+                  'rollbackOneChangeset', 'rollbackOneChangesetSql', 'rollbackOneUpdate',
+                  'rollbackOneUpdateSql', 'rollbackSql', 'rollbackToDate', 'rollbackToDateSql',
+                  'snapshotReference', 'syncHub', 'tag', 'tagExists', 'unexpectedChangesets',
+                  'updateCount', 'updateCountSql', 'updateOneChangeset', 'updateOneChangesetSql',
+                  'updateTestingRollback', 'updateToTag', 'updateToTagSql', 'updateSql']
+}.configureEach {
+    group = 'liquibase (hidden)'
+    description = 'Hidden default Liquibase task'
+}
+
+// Custom Liquibase tasks for specific environments
+task liquibaseUpdateDev {
+    group = 'liquibase'
+    description = 'Update development database'
+    doLast {
+        liquibase.runList = 'dev'
+        println "Set runList to 'dev'. Now run: ./gradlew update"
+    }
+}
+
+task liquibaseUpdateTest {
+    group = 'liquibase'
+    description = 'Update test database'
+    doLast {
+        liquibase.runList = 'test'
+        println "Set runList to 'test'. Now run: ./gradlew update"
+    }
+}
+
+task liquibaseUpdateProd {
+    group = 'liquibase'
+    description = 'Update production database'
+    doLast {
+        liquibase.runList = 'prod'
+        println "Set runList to 'prod'. Now run: ./gradlew update"
+    }
+}
+
+// Custom rollback task with parameter
+task liquibaseRollback {
+    group = 'liquibase'
+    description = 'Rollback database changes'
+    doLast {
+        if (project.hasProperty('rollbackCount')) {
+            liquibase.runList = 'main'
+            println "Set runList to 'main'. Now run: ./gradlew rollback"
+        } else {
+            println 'Please specify rollbackCount property: -ProllbackCount=1'
+        }
+    }
+}
+
+// Custom status task
+task liquibaseStatus {
+    group = 'liquibase'
+    description = 'Check database status'
+    doLast {
+        liquibase.runList = 'main'
+        println "Set runList to 'main'. Now run: ./gradlew status"
+    }
+}
+
+// Custom validate task
+task liquibaseValidate {
+    group = 'liquibase'
+    description = 'Validate changelog'
+    doLast {
+        liquibase.runList = 'main'
+        println "Set runList to 'main'. Now run: ./gradlew validate"
+    }
+}
+
+// Custom update task for main environment
+task liquibaseUpdate {
+    group = 'liquibase'
+    description = 'Update main database'
+    doLast {
+        liquibase.runList = 'main'
+        println "Set runList to 'main'. Now run: ./gradlew update"
+    }
+}
+
+// Custom updateSQL task
+task liquibaseUpdateSQL {
+    group = 'liquibase'
+    description = 'Generate SQL for database update (dry run)'
+    doLast {
+        liquibase.runList = 'main'
+        println "Set runList to 'main'. Now run: ./gradlew updateSQL"
+    }
+}
+
+// Pre-build tasks
+// Note: The Liquibase plugin automatically creates tasks like 'update', 'updateSQL', etc.
+// You can run them directly: ./gradlew update, ./gradlew updateSQL, etc.
+// build.dependsOn update  // Uncomment if you want build to depend on database update
