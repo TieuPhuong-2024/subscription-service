@@ -10,9 +10,7 @@ import java.util.List;
 @Repository
 public interface SubscriptionPlanRepository extends JpaRepository<SubscriptionPlan, Long> {
     
-    List<SubscriptionPlan> findByIsActiveTrue();
+    List<SubscriptionPlan> findByActiveTrue();
     
-    List<SubscriptionPlan> findByIsActiveTrueAndDuration(PlanDuration duration);
-    
-    SubscriptionPlan findByIdAndIsActiveTrue(Long id);
+    List<SubscriptionPlan> findByActiveTrueAndDuration(PlanDuration duration);
 }

@@ -65,7 +65,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
 
     @Override
     public List<SubscriptionPlanDTO> getAllActivePlans() {
-        List<SubscriptionPlan> activePlans = subscriptionPlanRepository.findByIsActiveTrue();
+        List<SubscriptionPlan> activePlans = subscriptionPlanRepository.findByActiveTrue();
         return activePlans.stream()
                 .map(subscriptionPlanMapper::toDto)
                 .collect(Collectors.toList());
@@ -73,7 +73,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
 
     @Override
     public List<SubscriptionPlanDTO> getActivePlansByDuration(PlanDuration duration) {
-        List<SubscriptionPlan> plans = subscriptionPlanRepository.findByIsActiveTrueAndDuration(duration);
+        List<SubscriptionPlan> plans = subscriptionPlanRepository.findByActiveTrueAndDuration(duration);
         return plans.stream()
                 .map(subscriptionPlanMapper::toDto)
                 .collect(Collectors.toList());

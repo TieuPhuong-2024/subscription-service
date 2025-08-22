@@ -288,7 +288,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Transactional
     public void processRenewals() {
         LocalDateTime now = LocalDateTime.now();
-        List<Subscription> renewableSubscriptions = subscriptionRepository.findSubscriptionsForRenewal(now);
+        LocalDateTime endDate = now.plusDays(7);
+        List<Subscription> renewableSubscriptions = subscriptionRepository.findSubscriptionsForRenewal(now, endDate);
         
         for (Subscription subscription : renewableSubscriptions) {
             try {
