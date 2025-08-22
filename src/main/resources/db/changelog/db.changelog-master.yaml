@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changes/001-create-subscription-tables.yaml
+      context: main,dev,test,prod
+      labels: core,subscription
