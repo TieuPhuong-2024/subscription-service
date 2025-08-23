@@ -44,6 +44,19 @@ public class Payment {
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
+    // PayOS specific fields
+    @Column(name = "payment_link_id")
+    private String paymentLinkId;
+
+    @Column(name = "qr_code")
+    private String qrCode;
+
+    @Column(name = "payment_url")
+    private String paymentUrl;
+
+    @Column(name = "webhook_data", columnDefinition = "TEXT")
+    private String webhookData;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

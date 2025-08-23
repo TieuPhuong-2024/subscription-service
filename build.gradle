@@ -22,6 +22,7 @@ configurations {
 repositories {
     maven { url 'https://repo.spring.io/milestone' }
     mavenCentral()
+    maven { url 'https://maven.payos.vn/' }
 }
 
 ext {
@@ -51,6 +52,9 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    // PayOS integration - using HTTP client instead of SDK
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test:6.3.0'

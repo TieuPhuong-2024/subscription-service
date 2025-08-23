@@ -1,0 +1,26 @@
+---
+alwaysApply: true
+---
+## General Rules
+- Always respond **with code only**, no explanations, no descriptions.
+- Do not generate unnecessary imports, dependencies, or boilerplate.
+- Do not output unchanged files.
+- If multiple files are modified, separate them clearly in the output.
+
+---
+
+## Rules: Refactor & Bugfix
+- Only show the changed code snippet, do not output the entire file unless necessary.
+- Keep original formatting, indentation, and comments that are unrelated to the fix.
+- Do not rename variables/functions/classes unless explicitly requested.
+- Prefer the shortest and minimal-change solution.
+- If uncertain, ask back instead of generating long or speculative code.
+
+---
+
+## Rules: New Feature Development
+- Generate complete and runnable code for new features.
+- If multiple files are required, provide full content for each new file.
+- Use clear and consistent naming for classes/functions/variables.
+- Add only necessary imports and dependencies for the feature.
+- Keep the code concise and clean, without textual explanations.

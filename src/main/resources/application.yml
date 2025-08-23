@@ -19,3 +19,12 @@ spring:
 
 server:
   port: 8081
+
+payos:
+  client-id: ${PAYOS_CLIENT_ID:your_client_id}
+  api-key: ${PAYOS_API_KEY:your_api_key}
+  checksum-key: ${PAYOS_CHECKSUM_KEY:your_checksum_key}
+  webhook-secret: ${PAYOS_WEBHOOK_SECRET:your_webhook_secret}
+  return-url: ${PAYOS_RETURN_URL:http://localhost:8081/api/payments/payos/return}
+  cancel-url: ${PAYOS_CANCEL_URL:http://localhost:8081/api/payments/payos/cancel}
+  webhook-url: ${PAYOS_WEBHOOK_URL:http://localhost:8081/api/payments/payos/webhook}

@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-payos-fields-to-payment-table
+      author: system
+      changes:
+        - addColumn:
+            tableName: payment
+            columns:
+              - column:
+                  name: payment_link_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: qr_code
+                  type: varchar(500)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: payment_url
+                  type: varchar(500)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: webhook_data
+                  type: text
+                  constraints:
+                    nullable: true
+        - addIndex:
+            tableName: payment
+            indexName: idx_payment_payment_link_id
+            columns:
+              - column:
+                  name: payment_link_id
+            unique: true

@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-subscription-tables.yaml
       context: main,dev,test,prod
       labels: core,subscription
+  - include:
+      file: db/changelog/changes/002-add-payos-fields.yaml
+      context: main,dev,test,prod
+      labels: payment,payos

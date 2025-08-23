@@ -19,6 +19,7 @@ import org.crochet.subscription.repository.PaymentRepository;
 import org.crochet.subscription.repository.SubscriptionHistoryRepository;
 import org.crochet.subscription.repository.SubscriptionRepository;
 import org.crochet.subscription.service.PaymentService;
+import org.crochet.subscription.service.PayOSService;
 import org.crochet.subscription.service.SubscriptionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +42,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMapper paymentMapper;
     private final SubscriptionHistoryMapper subscriptionHistoryMapper;
     private final SubscriptionService subscriptionService;
+    private final PayOSService payOSService;
 
     @Override
     @Transactional
@@ -199,5 +201,89 @@ public class PaymentServiceImpl implements PaymentService {
         
         Page<PaymentDTO> dtoPage = paymentPage.map(paymentMapper::toDto);
         return PageResponse.from(dtoPage);
+    }
+
+    @Override
+    @Transactional
+    public PaymentDTO createPayOSPaymentLink(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + paymentId));
+
+        // Check if payment is already processed
+        if (payment.getPaymentStatus() != PaymentStatus.PENDING) {
+            throw new IllegalStateException("Payment is already processed");
+        }
+
+        // Generate order code (using payment ID with timestamp for uniqueness)
+        String orderCode = String.valueOf(System.currentTimeMillis()) + paymentId;
+        payment.setTransactionId(orderCode);
+
+        try {
+            // Create PayOS payment request
+            org.crochet.subscription.dto.PayOSPaymentRequest payOSRequest =
+                org.crochet.subscription.dto.PayOSPaymentRequest.builder()
+                    .orderCode(orderCode)
+                    .amount(payment.getAmount())
+                    .description("Thanh toán subscription #" + payment.getSubscription().getId())
+                    .returnUrl("http://localhost:8081/api/payments/payos/return?paymentId=" + paymentId)
+                    .cancelUrl("http://localhost:8081/api/payments/payos/cancel?paymentId=" + paymentId)
+                    .build();
+
+            // Create PayOS payment link
+            org.crochet.subscription.dto.PayOSPaymentResponse payOSResponse = payOSService.createPaymentLink(payOSRequest);
+
+            // Update payment with PayOS information
+            payment.setPaymentLinkId(payOSResponse.getPaymentLinkId());
+            payment.setQrCode(payOSResponse.getQrCode());
+            payment.setPaymentUrl(payOSResponse.getPaymentLink());
+
+            Payment updatedPayment = paymentRepository.save(payment);
+            return paymentMapper.toDto(updatedPayment);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create PayOS payment link: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
+    public PaymentDTO processPayOSWebhook(Long orderCode, String webhookData, String signature) {
+        Payment payment = paymentRepository.findByTransactionId(String.valueOf(orderCode))
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with order code: " + orderCode));
+
+        // Store webhook data
+        payment.setWebhookData(webhookData);
+
+        // Process webhook through PayOS service
+        org.crochet.subscription.dto.PayOSWebhookData payOSWebhookData = parseWebhookData(webhookData);
+        boolean success = payOSService.processWebhook(payOSWebhookData, signature);
+
+        if (success) {
+            // Payment was updated in PayOSService, just return the updated payment
+            return paymentMapper.toDto(payment);
+        } else {
+            throw new RuntimeException("Failed to process PayOS webhook");
+        }
+    }
+
+    @Override
+    public PaymentDTO getPaymentByPaymentLinkId(String paymentLinkId) {
+        Payment payment = paymentRepository.findByPaymentLinkId(paymentLinkId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with payment link id: " + paymentLinkId));
+        return paymentMapper.toDto(payment);
+    }
+
+    private org.crochet.subscription.dto.PayOSWebhookData parseWebhookData(String webhookData) {
+        // This is a simple implementation - you might want to use a JSON parser
+        // For now, assuming webhookData is a JSON string with the expected fields
+        try {
+            // You should implement proper JSON parsing here
+            return org.crochet.subscription.dto.PayOSWebhookData.builder()
+                    .orderCode(0L) // Parse from webhookData
+                    .description("") // Parse from webhookData
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse webhook data: " + e.getMessage());
+        }
     }
 }

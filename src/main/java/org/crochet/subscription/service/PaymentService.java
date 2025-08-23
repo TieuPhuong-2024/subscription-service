@@ -97,4 +97,30 @@ public interface PaymentService {
      * @return paginated list of payments with the specified status
      */
     PageResponse<PaymentDTO> getPaymentsByStatus(PaymentStatus status, int page, int size);
+
+    /**
+     * Create PayOS payment link
+     *
+     * @param paymentId the payment ID
+     * @return the payment with PayOS link information
+     */
+    PaymentDTO createPayOSPaymentLink(Long paymentId);
+
+    /**
+     * Process PayOS webhook
+     *
+     * @param orderCode the order code from PayOS
+     * @param webhookData the webhook data
+     * @param signature the webhook signature
+     * @return the processed payment
+     */
+    PaymentDTO processPayOSWebhook(Long orderCode, String webhookData, String signature);
+
+    /**
+     * Get payment by payment link ID
+     *
+     * @param paymentLinkId the payment link ID
+     * @return the payment
+     */
+    PaymentDTO getPaymentByPaymentLinkId(String paymentLinkId);
 }
