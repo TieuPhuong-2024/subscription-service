@@ -1,6 +1,9 @@
 package org.crochet.subscription.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.crochet.subscription.dto.PayOSPaymentRequest;
+import org.crochet.subscription.dto.PayOSPaymentResponse;
+import org.crochet.subscription.dto.PayOSWebhookData;
 import org.crochet.subscription.dto.PaymentDTO;
 import org.crochet.subscription.dto.request.CreatePaymentRequest;
 import org.crochet.subscription.dto.request.UpdatePaymentRequest;
@@ -18,8 +21,8 @@ import org.crochet.subscription.model.SubscriptionHistory;
 import org.crochet.subscription.repository.PaymentRepository;
 import org.crochet.subscription.repository.SubscriptionHistoryRepository;
 import org.crochet.subscription.repository.SubscriptionRepository;
-import org.crochet.subscription.service.PaymentService;
 import org.crochet.subscription.service.PayOSService;
+import org.crochet.subscription.service.PaymentService;
 import org.crochet.subscription.service.SubscriptionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -49,10 +52,10 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentDTO createPayment(CreatePaymentRequest request) {
         Subscription subscription = subscriptionRepository.findById(request.getSubscriptionId())
                 .orElseThrow(() -> new ResourceNotFoundException("Subscription not found with id: " + request.getSubscriptionId()));
-        
+
         Payment payment = paymentMapper.toEntity(request, subscription);
         Payment savedPayment = paymentRepository.save(payment);
-        
+
         return paymentMapper.toDto(savedPayment);
     }
 
@@ -61,24 +64,24 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentDTO updatePayment(Long id, UpdatePaymentRequest request) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
-        
+
         PaymentStatus previousStatus = payment.getPaymentStatus();
         paymentMapper.updateEntityFromRequest(request, payment);
-        
+
         // If payment status changed to COMPLETED, update payment date
         if (request.getPaymentStatus() == PaymentStatus.COMPLETED && payment.getPaymentDate() == null) {
             payment.setPaymentDate(LocalDateTime.now());
         }
-        
+
         Payment updatedPayment = paymentRepository.save(payment);
-        
+
         // If payment status changed to COMPLETED, update subscription status
         if (previousStatus != PaymentStatus.COMPLETED && request.getPaymentStatus() == PaymentStatus.COMPLETED) {
             processSuccessfulPayment(updatedPayment.getId());
         } else if (previousStatus != PaymentStatus.FAILED && request.getPaymentStatus() == PaymentStatus.FAILED) {
             processFailedPayment(updatedPayment.getId(), "Payment failed");
         }
-        
+
         return paymentMapper.toDto(updatedPayment);
     }
 
@@ -101,7 +104,7 @@ public class PaymentServiceImpl implements PaymentService {
     public PageResponse<PaymentDTO> getPaymentsByUserId(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Payment> paymentPage = paymentRepository.findBySubscriptionUserId(userId, pageable);
-        
+
         Page<PaymentDTO> dtoPage = paymentPage.map(paymentMapper::toDto);
         return PageResponse.from(dtoPage);
     }
@@ -118,25 +121,25 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentDTO processSuccessfulPayment(Long id) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
-        
+
         // Update payment status
         payment.setPaymentStatus(PaymentStatus.COMPLETED);
         if (payment.getPaymentDate() == null) {
             payment.setPaymentDate(LocalDateTime.now());
         }
-        
+
         Payment updatedPayment = paymentRepository.save(payment);
-        
+
         // Update subscription status
         Subscription subscription = payment.getSubscription();
         SubscriptionStatus previousStatus = subscription.getStatus();
-        
+
         if (previousStatus == SubscriptionStatus.PENDING || previousStatus == SubscriptionStatus.PAYMENT_FAILED) {
             // Activate the subscription
             UpdateSubscriptionRequest updateRequest = new UpdateSubscriptionRequest();
             updateRequest.setStatus(SubscriptionStatus.ACTIVE);
             subscriptionService.updateSubscription(subscription.getId(), updateRequest);
-            
+
             // Create subscription history entry
             SubscriptionHistory history = subscriptionHistoryMapper.createHistoryEntry(
                     subscription,
@@ -144,10 +147,10 @@ public class PaymentServiceImpl implements PaymentService {
                     previousStatus,
                     SubscriptionStatus.ACTIVE,
                     "Payment completed successfully");
-            
+
             subscriptionHistoryRepository.save(history);
         }
-        
+
         return paymentMapper.toDto(updatedPayment);
     }
 
@@ -156,21 +159,21 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentDTO processFailedPayment(Long id, String failureReason) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
-        
+
         // Update payment status
         payment.setPaymentStatus(PaymentStatus.FAILED);
         Payment updatedPayment = paymentRepository.save(payment);
-        
+
         // Update subscription status
         Subscription subscription = payment.getSubscription();
         SubscriptionStatus previousStatus = subscription.getStatus();
-        
+
         if (previousStatus != SubscriptionStatus.PAYMENT_FAILED) {
             // Mark subscription as payment failed
             UpdateSubscriptionRequest updateRequest = new UpdateSubscriptionRequest();
             updateRequest.setStatus(SubscriptionStatus.PAYMENT_FAILED);
             subscriptionService.updateSubscription(subscription.getId(), updateRequest);
-            
+
             // Create subscription history entry
             SubscriptionHistory history = subscriptionHistoryMapper.createHistoryEntry(
                     subscription,
@@ -178,10 +181,10 @@ public class PaymentServiceImpl implements PaymentService {
                     previousStatus,
                     SubscriptionStatus.PAYMENT_FAILED,
                     failureReason != null ? failureReason : "Payment failed");
-            
+
             subscriptionHistoryRepository.save(history);
         }
-        
+
         return paymentMapper.toDto(updatedPayment);
     }
 
@@ -189,7 +192,7 @@ public class PaymentServiceImpl implements PaymentService {
     public PageResponse<PaymentDTO> getPaymentsByStatus(PaymentStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Payment> paymentPage = paymentRepository.findByPaymentStatus(status, pageable);
-        
+
         Page<PaymentDTO> dtoPage = paymentPage.map(paymentMapper::toDto);
         return PageResponse.from(dtoPage);
     }
@@ -198,7 +201,7 @@ public class PaymentServiceImpl implements PaymentService {
     public PageResponse<PaymentDTO> getPaymentsBySubscriptionId(Long subscriptionId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Payment> paymentPage = paymentRepository.findBySubscriptionId(subscriptionId, pageable);
-        
+
         Page<PaymentDTO> dtoPage = paymentPage.map(paymentMapper::toDto);
         return PageResponse.from(dtoPage);
     }
@@ -220,17 +223,17 @@ public class PaymentServiceImpl implements PaymentService {
 
         try {
             // Create PayOS payment request
-            org.crochet.subscription.dto.PayOSPaymentRequest payOSRequest =
-                org.crochet.subscription.dto.PayOSPaymentRequest.builder()
-                    .orderCode(orderCode)
-                    .amount(payment.getAmount())
-                    .description("Thanh toán subscription #" + payment.getSubscription().getId())
-                    .returnUrl("http://localhost:8081/api/payments/payos/return?paymentId=" + paymentId)
-                    .cancelUrl("http://localhost:8081/api/payments/payos/cancel?paymentId=" + paymentId)
-                    .build();
+            PayOSPaymentRequest payOSRequest =
+                    PayOSPaymentRequest.builder()
+                            .orderCode(orderCode)
+                            .amount(payment.getAmount())
+                            .description("Thanh toán subscription #" + payment.getSubscription().getId())
+                            .returnUrl("http://localhost:8081/api/payments/payos/return?paymentId=" + paymentId)
+                            .cancelUrl("http://localhost:8081/api/payments/payos/cancel?paymentId=" + paymentId)
+                            .build();
 
             // Create PayOS payment link
-            org.crochet.subscription.dto.PayOSPaymentResponse payOSResponse = payOSService.createPaymentLink(payOSRequest);
+            PayOSPaymentResponse payOSResponse = payOSService.createPaymentLink(payOSRequest);
 
             // Update payment with PayOS information
             payment.setPaymentLinkId(payOSResponse.getPaymentLinkId());
@@ -255,7 +258,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setWebhookData(webhookData);
 
         // Process webhook through PayOS service
-        org.crochet.subscription.dto.PayOSWebhookData payOSWebhookData = parseWebhookData(webhookData);
+        PayOSWebhookData payOSWebhookData = parseWebhookData(webhookData);
         boolean success = payOSService.processWebhook(payOSWebhookData, signature);
 
         if (success) {
@@ -273,12 +276,12 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentMapper.toDto(payment);
     }
 
-    private org.crochet.subscription.dto.PayOSWebhookData parseWebhookData(String webhookData) {
+    private PayOSWebhookData parseWebhookData(String webhookData) {
         // This is a simple implementation - you might want to use a JSON parser
         // For now, assuming webhookData is a JSON string with the expected fields
         try {
             // You should implement proper JSON parsing here
-            return org.crochet.subscription.dto.PayOSWebhookData.builder()
+            return PayOSWebhookData.builder()
                     .orderCode(0L) // Parse from webhookData
                     .description("") // Parse from webhookData
                     .build();
