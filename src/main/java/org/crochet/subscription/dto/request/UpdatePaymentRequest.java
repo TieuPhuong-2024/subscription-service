@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.crochet.subscription.enums.PaymentMethod;
 import org.crochet.subscription.enums.PaymentStatus;
 
 @Data
@@ -11,6 +12,7 @@ import org.crochet.subscription.enums.PaymentStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdatePaymentRequest {
+    private PaymentMethod paymentMethod;
     private PaymentStatus paymentStatus;
     private String transactionId;
 }

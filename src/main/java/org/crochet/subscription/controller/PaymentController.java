@@ -3,15 +3,22 @@ package org.crochet.subscription.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.crochet.subscription.dto.PaymentDTO;
+import org.crochet.subscription.dto.PaymentMethodInfo;
 import org.crochet.subscription.dto.request.CreatePaymentRequest;
 import org.crochet.subscription.dto.request.UpdatePaymentRequest;
 import org.crochet.subscription.dto.response.ApiResponse;
 import org.crochet.subscription.dto.response.PageResponse;
+import org.crochet.subscription.enums.PaymentMethod;
 import org.crochet.subscription.enums.PaymentStatus;
 import org.crochet.subscription.service.PaymentService;
+import org.crochet.subscription.util.PaymentMethodUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -83,5 +90,19 @@ public class PaymentController {
     public ResponseEntity<ApiResponse<PaymentDTO>> processFailedPayment(@PathVariable Long id) {
         PaymentDTO processedPayment = paymentService.processFailedPayment(id, null);
         return ResponseEntity.ok(ApiResponse.success("Payment marked as failed", processedPayment));
+    }
+
+    @GetMapping("/methods")
+    public ResponseEntity<ApiResponse<List<PaymentMethodInfo>>> getAvailablePaymentMethods() {
+        List<PaymentMethodInfo> paymentMethods = Arrays.stream(PaymentMethod.values())
+            .map(method -> PaymentMethodInfo.builder()
+                .method(method)
+                .displayName(PaymentMethodUtil.getDisplayName(method))
+                .description(PaymentMethodUtil.getDescription(method))
+                .payOSSupported(PaymentMethodUtil.isPayOSSupported(method))
+                .build())
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.success(paymentMethods));
     }
 }

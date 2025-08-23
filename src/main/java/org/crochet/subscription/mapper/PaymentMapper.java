@@ -25,7 +25,6 @@ public interface PaymentMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "subscription", ignore = true)
     @Mapping(target = "amount", ignore = true)
-    @Mapping(target = "paymentMethod", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateEntityFromRequest(UpdatePaymentRequest request, @MappingTarget Payment payment);
