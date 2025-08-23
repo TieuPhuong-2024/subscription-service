@@ -53,10 +53,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         // Set end date based on plan duration
         LocalDateTime startDate = LocalDateTime.now();
         LocalDateTime endDate = switch (plan.getDuration()) {
-            case MONTHLY -> startDate.plusMonths(1);
-            case QUARTERLY -> startDate.plusMonths(3);
-            case SEMI_ANNUAL -> startDate.plusMonths(6);
-            case ANNUAL -> startDate.plusYears(1);
+            case MONTH -> startDate.plusMonths(1);
+            case YEAR -> startDate.plusYears(1);
         };
 
         subscription.setStartDate(startDate);
@@ -260,10 +258,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         
         // Calculate new end date based on plan duration
         LocalDateTime newEndDate = switch (subscription.getPlan().getDuration()) {
-            case MONTHLY -> previousEndDate.plusMonths(1);
-            case QUARTERLY -> previousEndDate.plusMonths(3);
-            case SEMI_ANNUAL -> previousEndDate.plusMonths(6);
-            case ANNUAL -> previousEndDate.plusYears(1);
+            case MONTH -> previousEndDate.plusMonths(1);
+            case YEAR -> previousEndDate.plusYears(1);
         };
 
         subscription.setStatus(SubscriptionStatus.ACTIVE);

@@ -24,3 +24,13 @@ alwaysApply: true
 - Use clear and consistent naming for classes/functions/variables.
 - Add only necessary imports and dependencies for the feature.
 - Keep the code concise and clean, without textual explanations.
+
+## Efficiency
+- Avoid redundant output.
+- Do not repeat unchanged code or boilerplate unless strictly necessary.
+- Prioritize concise, optimized results.
+
+## Output Rules
+- Do not output change summaries, diffs, or meta descriptions (e.g., "Changed 5 lines").
+- Only output the exact code modifications or full new files if explicitly required.
+- Keep formatting, indentation, and style consistent with the existing project.
