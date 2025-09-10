@@ -18,5 +18,6 @@ public class CreateSubscriptionRequest {
     @NotNull(message = "Subscription plan ID is required")
     private Long planId;
     
+    @Builder.Default
     private boolean autoRenew = true;
 }

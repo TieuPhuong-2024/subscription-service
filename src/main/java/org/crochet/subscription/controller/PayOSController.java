@@ -2,7 +2,6 @@ package org.crochet.subscription.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.crochet.subscription.dto.PayOSPaymentResponse;
 import org.crochet.subscription.dto.PaymentDTO;
 import org.crochet.subscription.dto.response.ApiResponse;
 import org.crochet.subscription.service.PaymentService;

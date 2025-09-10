@@ -31,5 +31,6 @@ public class CreateSubscriptionPlanRequest {
     
     private String features;
     
+    @Builder.Default
     private boolean active = true;
 }
